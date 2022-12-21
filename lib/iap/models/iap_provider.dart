@@ -1,0 +1,1 @@
+enum IAPProvider { google, huawei }
