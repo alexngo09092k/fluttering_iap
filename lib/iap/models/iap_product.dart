@@ -6,8 +6,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:fluttering_iap/iap/models/iap_provider.dart';
 import 'package:fluttering_iap/iap/models/iap_type.dart';
 
-class IAPItem extends ChangeNotifier {
-  IAPItem({
+class IAPProduct extends ChangeNotifier {
+  IAPProduct({
     required this.type,
     required this.provider,
     required this.id,
@@ -24,12 +24,12 @@ class IAPItem extends ChangeNotifier {
     if (_isPurchased != isPurchased) notifyListeners();
   }
 
-  IAPItem copyWith({
+  IAPProduct copyWith({
     IAPType? type,
     IAPProvider? provider,
     String? id,
   }) {
-    return IAPItem(
+    return IAPProduct(
       type: type ?? this.type,
       provider: provider ?? this.provider,
       id: id ?? this.id,
@@ -44,8 +44,8 @@ class IAPItem extends ChangeNotifier {
     };
   }
 
-  factory IAPItem.fromMap(Map<String, dynamic> map) {
-    return IAPItem(
+  factory IAPProduct.fromMap(Map<String, dynamic> map) {
+    return IAPProduct(
       type: IAPType.values.firstWhere((e) => e.name == map['type']),
       provider: IAPProvider.values.firstWhere((e) => e.name == map['provider']),
       id: (map['id'] ?? "").toString(),
@@ -54,13 +54,13 @@ class IAPItem extends ChangeNotifier {
 
   String toJson() => json.encode(toMap());
 
-  factory IAPItem.fromJson(String source) => IAPItem.fromMap(json.decode(source) as Map<String, dynamic>);
+  factory IAPProduct.fromJson(String source) => IAPProduct.fromMap(json.decode(source) as Map<String, dynamic>);
 
   @override
-  String toString() => 'IAPItem(type: $type, provider: $provider, id: $id)';
+  String toString() => 'IAPProduct(type: $type, provider: $provider, id: $id)';
 
   @override
-  bool operator ==(covariant IAPItem other) {
+  bool operator ==(covariant IAPProduct other) {
     if (identical(this, other)) return true;
 
     return other.type == type && other.provider == provider && other.id == id;

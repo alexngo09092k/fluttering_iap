@@ -4,7 +4,7 @@ import 'package:fluttering_iap/iap/base_iap.dart';
 import 'package:fluttering_iap/iap/google/google_iap.dart';
 import 'package:fluttering_iap/iap/huawei/huawei_iap.dart';
 import 'package:fluttering_iap/iap/models/iap_config.dart';
-import 'package:fluttering_iap/iap/models/iap_item.dart';
+import 'package:fluttering_iap/iap/models/iap_product.dart';
 import 'package:fluttering_iap/iap/models/iap_provider.dart';
 
 abstract class IAwesomeIAP extends Provider with ProviderDelegate {
@@ -12,11 +12,11 @@ abstract class IAwesomeIAP extends Provider with ProviderDelegate {
 
   IAPProvider get provider => config.provider;
 
-  List<IAPItem> get products;
+  List<IAPProduct> get products;
 
   void initial(IAPConfig config);
 
-  Future<void> purchase(IAPItem product);
+  Future<void> purchase(IAPProduct product);
 }
 
 class AwesomeIAP extends IAwesomeIAP {
@@ -24,9 +24,9 @@ class AwesomeIAP extends IAwesomeIAP {
 
   late final BaseIAP _iap;
 
-  List<IAPItem> _products = [];
+  List<IAPProduct> _products = [];
   @override
-  List<IAPItem> get products => _products;
+  List<IAPProduct> get products => _products;
 
   @override
   IAPConfig get config => _config;
@@ -49,7 +49,7 @@ class AwesomeIAP extends IAwesomeIAP {
   }
 
   @override
-  Future<void> purchase(IAPItem product) async {
+  Future<void> purchase(IAPProduct product) async {
     try {
       if (_iap.isSupported) {
         return _iap.purchase(product);

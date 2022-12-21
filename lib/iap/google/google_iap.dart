@@ -4,7 +4,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:fluttering/fluttering.dart';
-import 'package:fluttering_iap/iap/models/iap_item.dart';
+import 'package:fluttering_iap/iap/models/iap_product.dart';
 import 'package:fluttering_iap/iap/models/iap_provider.dart';
 import 'package:fluttering_iap/iap/models/iap_type.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
@@ -17,16 +17,16 @@ import '../base_iap.dart';
 import 'payment_queue_delegate.dart';
 
 class GoogleIAP extends BaseIAP {
-  GoogleIAP(List<IAPItem> products) {
+  GoogleIAP(List<IAPProduct> products) {
     /// ISNTANCE OF IN APP PURCHASE
     _inAppPurchase = InAppPurchase.instance;
-    _products = ValueNotifier<Map<String, IAPItem>>(products.asMap().map((_, e) => MapEntry(e.id, e)));
+    _products = ValueNotifier<Map<String, IAPProduct>>(products.asMap().map((_, e) => MapEntry(e.id, e)));
     _error = ValueNotifier<Object?>(null);
 
     _initial().then((_) => _loadProducts());
   }
 
-  late final ValueNotifier<Map<String, IAPItem>> _products;
+  late final ValueNotifier<Map<String, IAPProduct>> _products;
   late final ValueNotifier<Object?> _error;
   late final InAppPurchase _inAppPurchase;
   late final StreamSubscription<List<PurchaseDetails>> _subscription;
@@ -45,7 +45,7 @@ class GoogleIAP extends BaseIAP {
   IAPProvider get provider => IAPProvider.google;
 
   @override
-  Future<void> purchase(IAPItem product) async {
+  Future<void> purchase(IAPProduct product) async {
     try {
       ProductDetails? productDetails = _productDetailsList.value[product.id];
       if (productDetails == null) return;
@@ -77,7 +77,7 @@ class GoogleIAP extends BaseIAP {
   }
 
   @override
-  void listen(Function(List<IAPItem>) onProductChanged, Function(Object?) onError) {
+  void listen(Function(List<IAPProduct>) onProductChanged, Function(Object?) onError) {
     _products.addListener(() => onProductChanged(_products.value.values.toList()));
     _error.addListener(() => onError(_error.value));
   }

@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:fluttering/fluttering.dart';
 import 'package:fluttering_iap/iap/base_iap.dart';
-import 'package:fluttering_iap/iap/models/iap_item.dart';
+import 'package:fluttering_iap/iap/models/iap_product.dart';
 import 'package:fluttering_iap/iap/models/iap_provider.dart';
 import 'package:fluttering_iap/iap/models/iap_type.dart';
 import 'package:huawei_iap/HmsIapLibrary.dart';
 
 class HuaweiIAP extends BaseIAP {
-  HuaweiIAP(List<IAPItem> products) {
-    _products = ValueNotifier<Map<String, IAPItem>>(products.asMap().map((_, e) => MapEntry(e.id, e)));
+  HuaweiIAP(List<IAPProduct> products) {
+    _products = ValueNotifier<Map<String, IAPProduct>>(products.asMap().map((_, e) => MapEntry(e.id, e)));
     _productInfos = ValueNotifier({});
     _purchaseInfos = ValueNotifier({})..addListener(_onPurchased);
     _error = ValueNotifier<Object?>(null);
@@ -18,7 +18,7 @@ class HuaweiIAP extends BaseIAP {
     }
   }
 
-  late final ValueNotifier<Map<String, IAPItem>> _products;
+  late final ValueNotifier<Map<String, IAPProduct>> _products;
   late final ValueNotifier<Object?> _error;
 
   late final ValueNotifier<Map<String, ProductInfo>> _productInfos;
@@ -31,7 +31,7 @@ class HuaweiIAP extends BaseIAP {
   IAPProvider get provider => IAPProvider.huawei;
 
   @override
-  Future<void> purchase(IAPItem product) async {
+  Future<void> purchase(IAPProduct product) async {
     try {
       late PurchaseResultInfo info;
       switch (product.type) {
@@ -72,7 +72,7 @@ class HuaweiIAP extends BaseIAP {
   }
 
   @override
-  void listen(Function(List<IAPItem>) onProductChanged, Function(Object?) onError) {
+  void listen(Function(List<IAPProduct>) onProductChanged, Function(Object?) onError) {
     _products.addListener(() => onProductChanged(_products.value.values.toList()));
     _error.addListener(() => onError(_error.value));
   }

@@ -1,4 +1,4 @@
-import 'package:fluttering_iap/iap/models/iap_item.dart';
+import 'package:fluttering_iap/iap/models/iap_product.dart';
 import 'package:fluttering_iap/iap/models/iap_provider.dart';
 
 abstract class BaseIAP {
@@ -6,7 +6,7 @@ abstract class BaseIAP {
 
   bool get isSupported;
 
-  Future<void> purchase(IAPItem product);
+  Future<void> purchase(IAPProduct product);
 
-  void listen(Function(List<IAPItem>) onProductChanged, Function(Object?) onError);
+  void listen(Function(List<IAPProduct>) onProductChanged, Function(Object?) onError);
 }
