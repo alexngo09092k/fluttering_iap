@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fluttering/fluttering.dart';
 import 'package:fluttering_iap/iap/base_iap.dart';
 import 'package:fluttering_iap/iap/models/iap_product.dart';
+import 'package:fluttering_iap/iap/models/iap_product_info.dart';
 import 'package:fluttering_iap/iap/models/iap_provider.dart';
 import 'package:fluttering_iap/iap/models/iap_type.dart';
 import 'package:huawei_iap/HmsIapLibrary.dart';
@@ -9,7 +10,7 @@ import 'package:huawei_iap/HmsIapLibrary.dart';
 class HuaweiIAP extends BaseIAP {
   HuaweiIAP(List<IAPProduct> products) {
     _products = ValueNotifier<Map<String, IAPProduct>>(products.asMap().map((_, e) => MapEntry(e.id, e)));
-    _productInfos = ValueNotifier({});
+    _productInfos = ValueNotifier({})..addListener(_onInfo);
     _purchaseInfos = ValueNotifier({})..addListener(_onPurchased);
     _error = ValueNotifier<Object?>(null);
     for (var type in IAPType.values) {
@@ -169,6 +170,22 @@ class HuaweiIAP extends BaseIAP {
     for (var e in _purchaseInfos.value.values) {
       if (_products.value[e.productId] != null) {
         _products.value[e.productId!] = _products.value[e.productId]!..setPurchased(e.purchaseState == 0);
+      }
+    }
+  }
+
+  _onInfo() {
+    for (var e in _productInfos.value.values) {
+      if (_products.value[e.productId] != null) {
+        _products.value[e.productId!] = _products.value[e.productId]!.copyWith(
+          info: IAPProductInfo(
+            price: e.price ?? '',
+            name: e.productName ?? '',
+            description: e.productDesc ?? '',
+            rawPrice: e.microsPrice?.toDouble() ?? 0,
+            currency: e.currency ?? '',
+          ),
+        );
       }
     }
   }

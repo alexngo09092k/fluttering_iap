@@ -5,6 +5,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:fluttering/fluttering.dart';
 import 'package:fluttering_iap/iap/models/iap_product.dart';
+import 'package:fluttering_iap/iap/models/iap_product_info.dart';
 import 'package:fluttering_iap/iap/models/iap_provider.dart';
 import 'package:fluttering_iap/iap/models/iap_type.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
@@ -22,7 +23,8 @@ class GoogleIAP extends BaseIAP {
     _inAppPurchase = InAppPurchase.instance;
     _products = ValueNotifier<Map<String, IAPProduct>>(products.asMap().map((_, e) => MapEntry(e.id, e)));
     _error = ValueNotifier<Object?>(null);
-
+    _purchaseDetailsList = ValueNotifier({})..addListener(_onInfo);
+    _productDetailsList = ValueNotifier({})..addListener(_onPurchased);
     _initial().then((_) => _loadProducts());
   }
 
@@ -32,8 +34,8 @@ class GoogleIAP extends BaseIAP {
   late final StreamSubscription<List<PurchaseDetails>> _subscription;
   late final InAppPurchaseStoreKitPlatformAddition _iosPlatformAddition;
 
-  final ValueNotifier<Map<String, PurchaseDetails>> _purchaseDetailsList = ValueNotifier({});
-  final ValueNotifier<Map<String, ProductDetails>> _productDetailsList = ValueNotifier({});
+  late final ValueNotifier<Map<String, PurchaseDetails>> _purchaseDetailsList;
+  late final ValueNotifier<Map<String, ProductDetails>> _productDetailsList;
 
   bool _isAvailable = false;
   bool get isAvailable => _isAvailable;
@@ -84,8 +86,6 @@ class GoogleIAP extends BaseIAP {
 
   Future<bool> _initial() async {
     /// LISTEN PURCHASE
-    _purchaseDetailsList.addListener(_onPurchased);
-
     _subscription = _inAppPurchase.purchaseStream.listen(
       (purchaseDetails) => _purchaseDetailsList.value.addAll(purchaseDetails.asMap().map((_, e) {
         if (e.pendingCompletePurchase) _inAppPurchase.completePurchase(e);
@@ -168,6 +168,22 @@ class GoogleIAP extends BaseIAP {
     for (var e in _purchaseDetailsList.value.values) {
       if (_products.value[e.productID] != null) {
         _products.value[e.productID] = _products.value[e.productID]!..setPurchased(e.status == PurchaseStatus.purchased);
+      }
+    }
+  }
+
+  _onInfo() {
+    for (var e in _productDetailsList.value.values) {
+      if (_products.value[e.id] != null) {
+        _products.value[e.id] = _products.value[e.id]!.copyWith(
+          info: IAPProductInfo(
+            price: e.price,
+            name: e.title,
+            description: e.description,
+            rawPrice: e.rawPrice,
+            currency: e.currencySymbol,
+          ),
+        );
       }
     }
   }
