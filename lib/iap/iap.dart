@@ -20,6 +20,13 @@ abstract class IAwesomeIAP extends Provider with ProviderDelegate {
 }
 
 class AwesomeIAP extends IAwesomeIAP {
+  static final IAwesomeIAP _instance = AwesomeIAP._internal();
+  static IAwesomeIAP get instance => _instance;
+
+  factory AwesomeIAP() => _instance as AwesomeIAP;
+
+  AwesomeIAP._internal();
+
   IAPConfig _config = const IAPConfig();
 
   late final BaseIAP _iap;
