@@ -39,7 +39,7 @@ class IAPConfig {
 
   factory IAPConfig.fromMap(Map<String, dynamic> map) {
     return IAPConfig(
-      products: map['products'].map<IAPProduct>((x) => IAPProduct.fromMap(x)).toList(),
+      products: (map['products']?? []).map<IAPProduct>((x) => IAPProduct.fromMap(x)).toList(),
       provider: IAPProvider.values.firstWhere((e) => e.name == map['provider']),
       enable: map['enable'] as bool,
     );

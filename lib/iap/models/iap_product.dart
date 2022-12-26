@@ -46,7 +46,7 @@ class IAPProduct extends ChangeNotifier {
       'type': type.name,
       'provider': provider.name,
       'id': id,
-      'info': info,
+      'info': info?.toMap(),
     };
   }
 
@@ -55,7 +55,7 @@ class IAPProduct extends ChangeNotifier {
       type: IAPType.values.firstWhere((e) => e.name == map['type']),
       provider: IAPProvider.values.firstWhere((e) => e.name == map['provider']),
       id: (map['id'] ?? "").toString(),
-      info: IAPProductInfo.fromMap(map['info']),
+      info: map['info'] ? IAPProductInfo.fromMap(map['info']) : null,
     );
   }
 
