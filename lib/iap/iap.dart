@@ -29,7 +29,7 @@ class AwesomeIAP extends IAwesomeIAP {
 
   IAPConfig _config = const IAPConfig();
 
-  late final BaseIAP _iap;
+  late BaseIAP _iap;
 
   List<IAPProduct> _products = [];
   @override
