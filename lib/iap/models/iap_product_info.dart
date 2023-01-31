@@ -47,7 +47,7 @@ class IAPProductInfo {
       price: map['price'] as String,
       name: map['name'] as String,
       description: map['description'] as String,
-      rawPrice: map['rawPrice'] as double,
+      rawPrice: double.parse(map['rawPrice'].toString()),
       currency: map['currency'] as String,
     );
   }
