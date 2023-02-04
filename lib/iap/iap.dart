@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:fluttering/fluttering.dart';
 import 'package:fluttering_iap/iap/base_iap.dart';
 import 'package:fluttering_iap/iap/google/google_iap.dart';
@@ -29,7 +28,7 @@ class AwesomeIAP extends IAwesomeIAP {
 
   IAPConfig _config = const IAPConfig();
 
-  late BaseIAP _iap;
+  BaseIAP? _iap;
 
   List<IAPProduct> _products = [];
   @override
@@ -41,15 +40,18 @@ class AwesomeIAP extends IAwesomeIAP {
   @override
   void initial(IAPConfig config) {
     _config = config;
+
+    /// CHECK ENABLED
+    if(!config.enable) return;
+
+    /// CREATE INSTANCE IAP
     if (_config.provider == IAPProvider.google) {
       _iap = GoogleIAP(config.products.where((e) => e.provider == IAPProvider.google).toList());
     } else if (_config.provider == IAPProvider.huawei) {
       _iap = HuaweiIAP(config.products.where((e) => e.provider == IAPProvider.huawei).toList());
-    } else {
-      throw ErrorDescription('No support InAppPuchase');
     }
 
-    _iap.listen((products) {
+    _iap?.listen((products) {
       _products = products;
       if (_products != products) notifyListeners();
     }, (error) => Debug.log(error.toString()));
@@ -58,10 +60,8 @@ class AwesomeIAP extends IAwesomeIAP {
   @override
   Future<void> purchase(IAPProduct product) async {
     try {
-      if (_iap.isSupported) {
-        return _iap.purchase(product);
-      } else {
-        throw ErrorDescription('No support InAppPuchase');
+      if (_iap != null && _iap!.isSupported) {
+        return _iap!.purchase(product);
       }
     } catch (error) {
       Debug.log(error);
