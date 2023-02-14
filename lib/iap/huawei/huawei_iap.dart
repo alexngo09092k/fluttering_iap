@@ -26,7 +26,7 @@ class HuaweiIAP extends BaseIAP {
   late final ValueNotifier<Map<String, InAppPurchaseData>> _purchaseInfos;
 
   @override
-  bool get isSupported => DeviceInfo.instance.android != null && (DeviceInfo.instance.android!.manufacturer ?? '').toUpperCase() == 'HUAWEI';
+  bool get isSupported => CurrentPlatform.instance.isHuawei;
 
   @override
   IAPProvider get provider => IAPProvider.huawei;
