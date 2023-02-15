@@ -8,23 +8,23 @@ import 'package:fluttering_iap/iap/models/iap_provider.dart';
 
 class IAPConfig {
   final List<IAPProduct> products;
-  final IAPProvider provider;
+  final List<IAPProvider> providers;
   final bool enable;
 
   const IAPConfig({
     this.products = const [],
-    this.provider = IAPProvider.google,
+    this.providers = const [],
     this.enable = true,
   });
 
   IAPConfig copyWith({
     List<IAPProduct>? products,
-    IAPProvider? provider,
+    List<IAPProvider>? providers,
     bool? enable,
   }) {
     return IAPConfig(
       products: products ?? this.products,
-      provider: provider ?? this.provider,
+      providers: providers ?? this.providers,
       enable: enable ?? this.enable,
     );
   }
@@ -32,7 +32,7 @@ class IAPConfig {
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
       'products': products.map((x) => x.toMap()).toList(),
-      'provider': provider.name,
+      'providers': providers.map((x) => x.name),
       'enable': enable,
     };
   }
@@ -40,7 +40,7 @@ class IAPConfig {
   factory IAPConfig.fromMap(Map<String, dynamic> map) {
     return IAPConfig(
       products: (map['products']?? []).map<IAPProduct>((x) => IAPProduct.fromMap(x)).toList(),
-      provider: IAPProvider.values.firstWhere((e) => e.name == map['provider']),
+      providers: (map['providers'] ?? []).map<IAPProvider>((x) => IAPProvider.values.firstWhere((e) => e.name == x)).toList(),
       enable: map['enable'] as bool,
     );
   }
@@ -50,15 +50,15 @@ class IAPConfig {
   factory IAPConfig.fromJson(String source) => IAPConfig.fromMap(json.decode(source) as Map<String, dynamic>);
 
   @override
-  String toString() => 'IAPConfig(products: $products, provider: $provider, enable: $enable)';
+  String toString() => 'IAPConfig(products: $products, providers: $providers, enable: $enable)';
 
   @override
   bool operator ==(covariant IAPConfig other) {
     if (identical(this, other)) return true;
 
-    return listEquals(other.products, products) && other.provider == provider && other.enable == enable;
+    return listEquals(other.products, products) && listEquals(other.providers, providers) && other.enable == enable;
   }
 
   @override
-  int get hashCode => products.hashCode ^ provider.hashCode ^ enable.hashCode;
+  int get hashCode => products.hashCode ^ providers.hashCode ^ enable.hashCode;
 }

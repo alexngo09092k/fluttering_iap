@@ -8,5 +8,7 @@ abstract class BaseIAP {
 
   Future<void> purchase(IAPProduct product);
 
+  Future<bool> initial();
+
   void listen(Function(List<IAPProduct>) onProductChanged, Function(Object?) onError);
 }

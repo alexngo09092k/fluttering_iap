@@ -13,10 +13,6 @@ class HuaweiIAP extends BaseIAP {
     _productInfos = ValueNotifier({})..addListener(_onInfo);
     _purchaseInfos = ValueNotifier({})..addListener(_onPurchased);
     _error = ValueNotifier<Object?>(null);
-    for (var type in IAPType.values) {
-      _loadProducts(type);
-      _loadPurchaseProducts(type);
-    }
   }
 
   late final ValueNotifier<Map<String, IAPProduct>> _products;
@@ -30,6 +26,15 @@ class HuaweiIAP extends BaseIAP {
 
   @override
   IAPProvider get provider => IAPProvider.huawei;
+
+  @override
+  Future<bool> initial() async {
+    for (var type in IAPType.values) {
+      _loadProducts(type);
+      _loadPurchaseProducts(type);
+    }
+    return true;
+  }
 
   @override
   Future<void> purchase(IAPProduct product) async {

@@ -9,8 +9,6 @@ import 'package:fluttering_iap/iap/models/iap_provider.dart';
 abstract class IAwesomeIAP extends Provider with ProviderDelegate {
   IAPConfig get config;
 
-  IAPProvider get provider => config.provider;
-
   List<IAPProduct> get products;
 
   void initial(IAPConfig config);
@@ -28,40 +26,56 @@ class AwesomeIAP extends IAwesomeIAP {
 
   IAPConfig _config = const IAPConfig();
 
-  BaseIAP? _iap;
+  final Map<IAPProvider, BaseIAP> _iaps = {};
 
-  List<IAPProduct> _products = [];
+  final Map<IAPProvider, List<IAPProduct>> _products = {};
+
   @override
-  List<IAPProduct> get products => _products;
+  List<IAPProduct> get products {
+    List<IAPProduct> _ = [];
+    for (var list in _products.values) {
+      _.addAll(list);
+    }
+    return _;
+  }
 
   @override
   IAPConfig get config => _config;
 
   @override
-  void initial(IAPConfig config) {
+  void initial(IAPConfig config) async {
     _config = config;
 
     /// CHECK ENABLED
     if(!config.enable) return;
 
     /// CREATE INSTANCE IAP
-    if (_config.provider == IAPProvider.google) {
-      _iap = GoogleIAP(config.products.where((e) => e.provider == IAPProvider.google).toList());
-    } else if (_config.provider == IAPProvider.huawei) {
-      _iap = HuaweiIAP(config.products.where((e) => e.provider == IAPProvider.huawei).toList());
+    _iaps.clear();
+    for (var provider in _config.providers) {
+      if(!_iaps.containsKey(provider)) {
+        if(provider == IAPProvider.google) {
+          _iaps[provider] = GoogleIAP(products.where((element) => element.provider == provider).toList());
+        }else if(provider == IAPProvider.huawei) {
+          _iaps[provider] = HuaweiIAP(products.where((element) => element.provider == provider).toList());
+        }
+        if(_iaps[provider] != null && _iaps[provider]!.isSupported) {
+          final bool done = await _iaps[provider]!.initial();
+          if(done) {
+            _iaps[provider]!.listen((products) {
+              _products[provider] = products;
+              notifyListeners();
+            }, (error) => Debug.log(error.toString()));
+           }
+        }
+      }
     }
-
-    _iap?.listen((products) {
-      _products = products;
-      if (_products != products) notifyListeners();
-    }, (error) => Debug.log(error.toString()));
   }
 
   @override
   Future<void> purchase(IAPProduct product) async {
     try {
-      if (_iap != null && _iap!.isSupported) {
-        return _iap!.purchase(product);
+      if (_iaps[product.provider] != null && _iaps[product.provider]!.isSupported) {
+        return _iaps[product.provider]!.purchase(product);
       }
     } catch (error) {
       Debug.log(error);

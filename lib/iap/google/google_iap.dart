@@ -25,7 +25,6 @@ class GoogleIAP extends BaseIAP {
     _error = ValueNotifier<Object?>(null);
     _purchaseDetailsList = ValueNotifier({})..addListener(_onInfo);
     _productDetailsList = ValueNotifier({})..addListener(_onPurchased);
-    _initial().then((_) => _loadProducts());
   }
 
   late final ValueNotifier<Map<String, IAPProduct>> _products;
@@ -84,7 +83,8 @@ class GoogleIAP extends BaseIAP {
     _error.addListener(() => onError(_error.value));
   }
 
-  Future<bool> _initial() async {
+  @override
+  Future<bool> initial() async {
     /// LISTEN PURCHASE
     _subscription = _inAppPurchase.purchaseStream.listen(
       (purchaseDetails) => _purchaseDetailsList.value.addAll(purchaseDetails.asMap().map((_, e) {
@@ -109,11 +109,13 @@ class GoogleIAP extends BaseIAP {
       _error.value = error;
     }
 
-    /// DONE
+    /// LOAD PRODUCTS
+    await _loadProducts();
+
     return true;
   }
 
-  _loadProducts() async {
+  Future<void> _loadProducts() async {
     try {
       ProductDetailsResponse res = await _inAppPurchase.queryProductDetails(_products.value.keys.toSet());
       if (res.error != null) {
