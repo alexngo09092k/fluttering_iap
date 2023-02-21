@@ -39,8 +39,9 @@ class GoogleIAP extends BaseIAP {
   bool _isAvailable = false;
   bool get isAvailable => _isAvailable;
 
+  bool _isSupported = CurrentPlatform.instance.isMobile;
   @override
-  bool get isSupported => CurrentPlatform.instance.isMobile;
+  bool get isSupported => _isSupported;
 
   @override
   IAPProvider get provider => IAPProvider.google;
@@ -100,6 +101,8 @@ class GoogleIAP extends BaseIAP {
 
     /// CHECK IS AVAILIBALE
     try {
+      _isSupported = await CurrentPlatform.instance.isGmsAvailable;
+      Debug.log("GoogleIAP is supported $_isSupported");
       _isAvailable = await _inAppPurchase.isAvailable();
       if (_isAvailable && CurrentPlatform.instance.isIos) {
         _iosPlatformAddition = _inAppPurchase.getPlatformAddition<InAppPurchaseStoreKitPlatformAddition>();

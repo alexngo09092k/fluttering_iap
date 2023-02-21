@@ -21,19 +21,28 @@ class HuaweiIAP extends BaseIAP {
   late final ValueNotifier<Map<String, ProductInfo>> _productInfos;
   late final ValueNotifier<Map<String, InAppPurchaseData>> _purchaseInfos;
 
+
+  bool _isSupported = CurrentPlatform.instance.isHuawei;
   @override
-  bool get isSupported => CurrentPlatform.instance.isHuawei;
+  bool get isSupported => _isSupported;
 
   @override
   IAPProvider get provider => IAPProvider.huawei;
 
   @override
   Future<bool> initial() async {
-    for (var type in IAPType.values) {
-      _loadProducts(type);
-      _loadPurchaseProducts(type);
-    }
+    try {
+      _isSupported = await CurrentPlatform.instance.isHmsAvailable;
+      Debug.log("HuaweiIAP is supported $_isSupported");
+      for (var type in IAPType.values) {
+        _loadProducts(type);
+        _loadPurchaseProducts(type);
+      }
     return true;
+    }catch(error) {
+      Debug.log(error);
+    }
+    return false;
   }
 
   @override
