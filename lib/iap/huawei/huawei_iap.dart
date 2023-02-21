@@ -40,7 +40,8 @@ class HuaweiIAP extends BaseIAP {
       }
     return true;
     }catch(error) {
-      Debug.log(error);
+      _error.value = error;
+      Debug.log("HuaweiIAP initial error $error");
     }
     return false;
   }

@@ -101,7 +101,7 @@ class GoogleIAP extends BaseIAP {
 
     /// CHECK IS AVAILIBALE
     try {
-      _isSupported = await CurrentPlatform.instance.isGmsAvailable;
+      _isSupported = CurrentPlatform.instance.isIos || await CurrentPlatform.instance.isGmsAvailable;
       Debug.log("GoogleIAP is supported $_isSupported");
       _isAvailable = await _inAppPurchase.isAvailable();
       if (_isAvailable && CurrentPlatform.instance.isIos) {
@@ -110,6 +110,7 @@ class GoogleIAP extends BaseIAP {
       }
     } catch (error) {
       _error.value = error;
+      Debug.log("GoogleIAP initial error $error");
     }
 
     /// LOAD PRODUCTS
