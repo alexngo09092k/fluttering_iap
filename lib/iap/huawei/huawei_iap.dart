@@ -32,7 +32,7 @@ class HuaweiIAP extends BaseIAP {
   @override
   Future<bool> initial() async {
     try {
-      _isSupported = await CurrentPlatform.instance.isHmsAvailable;
+      _isSupported = !CurrentPlatform.instance.isIos || await CurrentPlatform.instance.isHmsAvailable;
       Debug.log("HuaweiIAP is supported $_isSupported");
       for (var type in IAPType.values) {
         _loadProducts(type);
