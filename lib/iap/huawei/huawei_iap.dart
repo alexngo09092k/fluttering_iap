@@ -34,11 +34,13 @@ class HuaweiIAP extends BaseIAP {
     try {
       _isSupported = !CurrentPlatform.instance.isIos || await CurrentPlatform.instance.isHmsAvailable;
       Debug.log("HuaweiIAP is supported $_isSupported");
-      for (var type in IAPType.values) {
-        _loadProducts(type);
-        _loadPurchaseProducts(type);
+      if(_isSupported) {
+        for (var type in IAPType.values) {
+          _loadProducts(type);
+          _loadPurchaseProducts(type);
+        }
       }
-    return true;
+      return true;
     }catch(error) {
       _error.value = error;
       Debug.log("HuaweiIAP initial error $error");

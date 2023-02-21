@@ -86,37 +86,39 @@ class GoogleIAP extends BaseIAP {
 
   @override
   Future<bool> initial() async {
-    /// LISTEN PURCHASE
-    _subscription = _inAppPurchase.purchaseStream.listen(
-      (purchaseDetails) => _purchaseDetailsList.value.addAll(purchaseDetails.asMap().map((_, e) {
-        if (e.pendingCompletePurchase) _inAppPurchase.completePurchase(e);
-        return MapEntry(e.productID, e);
-      })),
-      onDone: () => _subscription.cancel(),
-      onError: (error) {
-        _error.value = error;
-        _subscription.cancel();
-      },
-    );
-
-    /// CHECK IS AVAILIBALE
     try {
       _isSupported = CurrentPlatform.instance.isIos || await CurrentPlatform.instance.isGmsAvailable;
       Debug.log("GoogleIAP is supported $_isSupported");
-      _isAvailable = await _inAppPurchase.isAvailable();
-      if (_isAvailable && CurrentPlatform.instance.isIos) {
-        _iosPlatformAddition = _inAppPurchase.getPlatformAddition<InAppPurchaseStoreKitPlatformAddition>();
-        await _iosPlatformAddition.setDelegate(PaymentQueueDelegate());
+      /// LISTEN PURCHASE
+      _subscription = _inAppPurchase.purchaseStream.listen(
+        (purchaseDetails) => _purchaseDetailsList.value.addAll(purchaseDetails.asMap().map((_, e) {
+          if (e.pendingCompletePurchase) _inAppPurchase.completePurchase(e);
+          return MapEntry(e.productID, e);
+        })),
+        onDone: () => _subscription.cancel(),
+        onError: (error) {
+          _error.value = error;
+          _subscription.cancel();
+        },
+      );
+      if(_isSupported) {
+        /// CHECK IS AVAILIBALE
+        _isAvailable = await _inAppPurchase.isAvailable();
+        if (_isAvailable && CurrentPlatform.instance.isIos) {
+          _iosPlatformAddition = _inAppPurchase.getPlatformAddition<InAppPurchaseStoreKitPlatformAddition>();
+          await _iosPlatformAddition.setDelegate(PaymentQueueDelegate());
+        }
+        /// LOAD PRODUCTS
+        await _loadProducts();
+
+        return true;
       }
     } catch (error) {
       _error.value = error;
       Debug.log("GoogleIAP initial error $error");
     }
 
-    /// LOAD PRODUCTS
-    await _loadProducts();
-
-    return true;
+    return false;
   }
 
   Future<void> _loadProducts() async {
