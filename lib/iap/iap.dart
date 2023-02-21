@@ -52,20 +52,25 @@ class AwesomeIAP extends IAwesomeIAP {
     /// CREATE INSTANCE IAP
     _iaps.clear();
     for (var provider in _config.providers) {
+      BaseIAP? iap;
       if(!_iaps.containsKey(provider)) {
         if(provider == IAPProvider.google) {
-          _iaps[provider] = GoogleIAP(products.where((element) => element.provider == provider).toList());
+          iap = GoogleIAP(products.where((element) => element.provider == provider).toList());
         }else if(provider == IAPProvider.huawei) {
-          _iaps[provider] = HuaweiIAP(products.where((element) => element.provider == provider).toList());
+          iap = HuaweiIAP(products.where((element) => element.provider == provider).toList());
         }
-        if(_iaps[provider] != null && _iaps[provider]!.isSupported) {
-          final bool done = await _iaps[provider]!.initial();
-          if(done) {
-            _iaps[provider]!.listen((products) {
-              _products[provider] = products;
-              notifyListeners();
-            }, (error) => Debug.log(error.toString()));
-           }
+      }
+      if(iap != null) {
+        final done = await iap.initial();
+        if(done) {
+          iap.listen(
+            (products) {
+                _products[provider] = products;
+                notifyListeners();
+            }, 
+            (error) => Debug.log(error.toString())
+          );
+          _iaps[provider] = iap;
         }
       }
     }
