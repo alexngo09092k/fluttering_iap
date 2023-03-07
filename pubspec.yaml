@@ -11,12 +11,12 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  plugin_platform_interface: ^2.0.2
+  plugin_platform_interface: 
   fluttering:
     git:
       url: git@github.com:brennan992k/fluttering.git
-  in_app_purchase: ^3.0.8
-  huawei_iap: ^6.4.0+301
+  in_app_purchase: 
+  huawei_iap: 
 
 dev_dependencies:
   flutter_test:
