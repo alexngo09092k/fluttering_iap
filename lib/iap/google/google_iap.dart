@@ -75,6 +75,7 @@ class GoogleIAP extends BaseIAP {
       }
     } catch (error) {
       _error.value = error;
+      Debug.log("GOOGLE IAP PURCHASE ERROR $error");
     }
   }
 
@@ -88,7 +89,7 @@ class GoogleIAP extends BaseIAP {
   Future<bool> initial() async {
     try {
       _isSupported = await CurrentPlatform.instance.isGmsAvailable;
-      Debug.log("GoogleIAP is supported $_isSupported");
+      Debug.log("GOOGLE IAP IS SUPPORTED $_isSupported");
       /// LISTEN PURCHASE
       _subscription = _inAppPurchase.purchaseStream.listen(
         (purchaseDetails) => _purchaseDetailsList.value.addAll(purchaseDetails.asMap().map((_, e) {
@@ -115,7 +116,7 @@ class GoogleIAP extends BaseIAP {
       }
     } catch (error) {
       _error.value = error;
-      Debug.log("GoogleIAP initial error $error");
+      Debug.log("GOOGLE IAP INITIAL ERROR $error");
     }
 
     return false;
@@ -133,6 +134,7 @@ class GoogleIAP extends BaseIAP {
       }));
     } catch (error) {
       _error.value = error;
+      Debug.log("GOOGLE IAP LOAD PRODUCTS ERROR $error");
     }
   }
 

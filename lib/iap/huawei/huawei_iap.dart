@@ -33,7 +33,7 @@ class HuaweiIAP extends BaseIAP {
   Future<bool> initial() async {
     try {
       _isSupported = await CurrentPlatform.instance.isHmsAvailable;
-      Debug.log("HuaweiIAP is supported $_isSupported");
+      Debug.log("HUAWEI IAP IS SUPPORTED $_isSupported");
       if(_isSupported) {
         for (var type in IAPType.values) {
           _loadProducts(type);
@@ -43,7 +43,7 @@ class HuaweiIAP extends BaseIAP {
       return true;
     }catch(error) {
       _error.value = error;
-      Debug.log("HuaweiIAP initial error $error");
+      Debug.log("HUAWEI IAP INITIAL ERROR $error");
     }
     return false;
   }
@@ -86,6 +86,7 @@ class HuaweiIAP extends BaseIAP {
       }
     } catch (error) {
       _error.value = error;
+      Debug.log("HUAWEI IAP PURCHASE ERROR $error");
     }
   }
 
@@ -141,6 +142,7 @@ class HuaweiIAP extends BaseIAP {
       }));
     } catch (error) {
       _error.value = error;
+      Debug.log("HUAWEI IAP LOAD PRODUCTS ERROR $error");
     }
   }
 
@@ -180,6 +182,7 @@ class HuaweiIAP extends BaseIAP {
       }));
     } catch (error) {
       _error.value = error;
+      Debug.log("HUAWEI IAP LOAD PURCHASE PRODUCTS ERROR $error");
     }
   }
 
