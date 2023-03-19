@@ -99,10 +99,12 @@ class GoogleIAP extends BaseIAP {
       Debug.log("GOOGLE IAP IS SUPPORTED $_isSupported");
       /// LISTEN PURCHASE
       _subscription = _inAppPurchase.purchaseStream.listen(
-        (purchaseDetails) => _purchaseDetailsList.value.addAll(purchaseDetails.asMap().map((_, e) {
-          if (e.pendingCompletePurchase) _inAppPurchase.completePurchase(e);
-          return MapEntry(e.productID, e);
-        })),
+        (purchaseDetails) {
+          _productDetailsList.value = Map<String, ProductDetails>.from(_purchaseDetailsList.value..addAll(purchaseDetails.asMap().map((_, e) {
+            if (e.pendingCompletePurchase) _inAppPurchase.completePurchase(e);
+            return MapEntry(e.productID, e);
+          })));
+        },
         onDone: () => _subscription.cancel(),
         onError: (error) {
           _error.value = error;
@@ -135,10 +137,9 @@ class GoogleIAP extends BaseIAP {
       if (res.error != null) {
         _error.value = res.error;
       }
-      _productDetailsList.value.clear();
-      _productDetailsList.value.addAll(res.productDetails.asMap().map((_, e) {
+      _productDetailsList.value = Map<String, ProductDetails>.from(_productDetailsList.value..addAll(res.productDetails.asMap().map((_, e) {
         return MapEntry(e.id, e);
-      }));
+      })));
     } catch (error) {
       _error.value = error;
       Debug.log("GOOGLE IAP LOAD PRODUCTS ERROR $error");

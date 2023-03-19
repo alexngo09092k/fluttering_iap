@@ -144,9 +144,9 @@ class HuaweiIAP extends BaseIAP {
           break;
       }
 
-      _productInfos.value = _productInfos.value..addAll(list.asMap().map((_, e) {
+      _productInfos.value = Map<String, ProductInfo>.from(_productInfos.value..addAll(list.asMap().map((_, e) {
         return MapEntry(e.productId!, e);
-      }));
+      })));
 
     } catch (error) {
       _error.value = error;
@@ -185,9 +185,9 @@ class HuaweiIAP extends BaseIAP {
         default:
       }
 
-      _purchaseInfos.value = _purchaseInfos.value..addAll(list.asMap().map((_, e) {
+      _purchaseInfos.value = Map<String, InAppPurchaseData>.from(_purchaseInfos.value..addAll(list.asMap().map((_, e) {
         return MapEntry(e.productId!, e);
-      }));
+      })));
     } catch (error) {
       _error.value = error;
       Debug.log("HUAWEI IAP LOAD PURCHASE PRODUCTS ERROR $error");
