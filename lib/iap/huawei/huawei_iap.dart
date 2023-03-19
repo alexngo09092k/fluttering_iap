@@ -105,39 +105,39 @@ class HuaweiIAP extends BaseIAP {
 
   _loadProducts(IAPType type) async {
     try {
-      List<ProductInfo> list = [];
-
+      final List<ProductInfo> list = [];
+      final List<String> skuIds = _products.value.values.where((e) => e.type == type).map((e) => e.id).toList();
       switch (type) {
         case IAPType.consumables:
-          list.addAll((await IapClient.obtainProductInfo(
+          if(skuIds.isNotEmpty) {
+            list.addAll((await IapClient.obtainProductInfo(
                 ProductInfoReq(
                   priceType: IapClient.IN_APP_CONSUMABLE,
-                  skuIds: _products.value.values.where((e) => e.type == IAPType.consumables).map((e) => e.id).toList(),
+                  skuIds: skuIds,
                 ),
-              ))
-                  .productInfoList ??
-              []);
+              )).productInfoList ?? []);
+          }
 
           break;
         case IAPType.nonConsumables:
-          list.addAll((await IapClient.obtainProductInfo(
+          if(skuIds.isNotEmpty) {
+            list.addAll((await IapClient.obtainProductInfo(
                 ProductInfoReq(
                   priceType: IapClient.IN_APP_NONCONSUMABLE,
-                  skuIds: _products.value.values.where((e) => e.type == IAPType.nonConsumables).map((e) => e.id).toList(),
+                  skuIds: skuIds,
                 ),
-              ))
-                  .productInfoList ??
-              []);
+              )).productInfoList ?? []);
+          }
           break;
         case IAPType.subscriptions:
-          list.addAll((await IapClient.obtainProductInfo(
+          if(skuIds.isNotEmpty) {
+            list.addAll((await IapClient.obtainProductInfo(
                 ProductInfoReq(
                   priceType: IapClient.IN_APP_SUBSCRIPTION,
-                  skuIds: _products.value.values.where((e) => e.type == IAPType.subscriptions).map((e) => e.id).toList(),
+                  skuIds: skuIds,
                 ),
-              ))
-                  .productInfoList ??
-              []);
+              )).productInfoList ?? []);
+          }
 
           break;
         default:
@@ -147,6 +147,7 @@ class HuaweiIAP extends BaseIAP {
       _productInfos.value = _productInfos.value..addAll(list.asMap().map((_, e) {
         return MapEntry(e.productId!, e);
       }));
+
     } catch (error) {
       _error.value = error;
       Debug.log("HUAWEI IAP LOAD PRODUCTS ERROR $error");
