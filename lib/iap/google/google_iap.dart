@@ -81,8 +81,15 @@ class GoogleIAP extends BaseIAP {
 
   @override
   void listen(Function(List<IAPProduct>) onProductChanged, Function(Object?) onError) {
-    _products.addListener(() => onProductChanged(_products.value.values.toList()));
-    _error.addListener(() => onError(_error.value));
+    _products.addListener(() {
+      Debug.log("HUAWEI IAP PRODUCTS CHANGED ${_products.value.values}");
+      onProductChanged(_products.value.values.toList());
+    });
+
+    _error.addListener(() {
+      Debug.log("HUAWEI IAP HAS ERROR ${_error.value}");
+      onError(_error.value);
+    });
   }
 
   @override
@@ -180,6 +187,8 @@ class GoogleIAP extends BaseIAP {
         _products.value[e.productID] = _products.value[e.productID]!..setPurchased(e.status == PurchaseStatus.purchased);
       }
     }
+
+    _products.value = Map<String, IAPProduct>.from(_products.value);
   }
 
   _onInfo() {
@@ -196,6 +205,8 @@ class GoogleIAP extends BaseIAP {
         );
       }
     }
+
+    _products.value = Map<String, IAPProduct>.from(_products.value);
   }
 
   dispose() {
