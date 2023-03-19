@@ -82,12 +82,12 @@ class GoogleIAP extends BaseIAP {
   @override
   void listen(Function(List<IAPProduct>) onProductChanged, Function(Object?) onError) {
     _products.addListener(() {
-      Debug.log("HUAWEI IAP PRODUCTS CHANGED ${_products.value.values}");
+      Debug.log("GOOGLE IAP PRODUCTS CHANGED ${_products.value.values}");
       onProductChanged(_products.value.values.toList());
     });
 
     _error.addListener(() {
-      Debug.log("HUAWEI IAP HAS ERROR ${_error.value}");
+      Debug.log("GOOGLE IAP HAS ERROR ${_error.value}");
       onError(_error.value);
     });
   }
