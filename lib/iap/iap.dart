@@ -55,9 +55,9 @@ class AwesomeIAP extends IAwesomeIAP {
       BaseIAP? iap;
       if(!_iaps.containsKey(provider)) {
         if(provider == IAPProvider.google) {
-          iap = GoogleIAP(products.where((element) => element.provider == provider).toList());
+          iap = GoogleIAP(_config.products.where((element) => element.provider == provider).toList());
         }else if(provider == IAPProvider.huawei) {
-          iap = HuaweiIAP(products.where((element) => element.provider == provider).toList());
+          iap = HuaweiIAP(_config.products.where((element) => element.provider == provider).toList());
         }
       }
       if(iap != null) {
