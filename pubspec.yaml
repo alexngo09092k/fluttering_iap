@@ -5,18 +5,18 @@ homepage:
 publish_to: none
 
 environment:
-  sdk: '>=2.18.2 <3.0.0'
+  sdk: '>=2.19.6 <3.0.0'
   flutter: ">=2.5.0"
 
 dependencies:
   flutter:
     sdk: flutter
-  plugin_platform_interface: 
+  plugin_platform_interface: ^2.1.4
   fluttering:
     git:
       url: git@github.com:brennan992k/fluttering.git
-  in_app_purchase: 
-  huawei_iap: 
+  in_app_purchase: ^3.1.5
+  huawei_iap: ^6.4.0+302
 
 dev_dependencies:
   flutter_test:

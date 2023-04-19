@@ -5,7 +5,7 @@ import 'package:fluttering_iap/iap/models/iap_product.dart';
 import 'package:fluttering_iap/iap/models/iap_product_info.dart';
 import 'package:fluttering_iap/iap/models/iap_provider.dart';
 import 'package:fluttering_iap/iap/models/iap_type.dart';
-import 'package:huawei_iap/HmsIapLibrary.dart';
+import 'package:huawei_iap/huawei_iap.dart';
 
 class HuaweiIAP extends BaseIAP {
   HuaweiIAP(List<IAPProduct> products) {
