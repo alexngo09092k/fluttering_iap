@@ -1,6 +1,6 @@
 name: fluttering_iap
-description: Fluttering In App Purchase
-version: 0.0.1
+description: in app purchase for flutter (support google and huawei)
+version: 1.0.1
 homepage:
 publish_to: none
 

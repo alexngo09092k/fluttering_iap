@@ -1,10 +1,10 @@
 import Flutter
 import UIKit
 
-public class SwiftFlutteringIapPlugin: NSObject, FlutterPlugin {
+public class FlutteringIapPlugin: NSObject, FlutterPlugin {
   public static func register(with registrar: FlutterPluginRegistrar) {
     let channel = FlutterMethodChannel(name: "fluttering_iap", binaryMessenger: registrar.messenger())
-    let instance = SwiftFlutteringIapPlugin()
+    let instance = FlutteringIapPlugin()
     registrar.addMethodCallDelegate(instance, channel: channel)
   }
 

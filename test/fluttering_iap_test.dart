@@ -3,7 +3,10 @@ import 'package:fluttering_iap/fluttering_iap_platform_interface.dart';
 import 'package:fluttering_iap/fluttering_iap_method_channel.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
-class MockFlutteringIapPlatform with MockPlatformInterfaceMixin implements FlutteringIapPlatform {
+class MockFlutteringIapPlatform
+    with MockPlatformInterfaceMixin
+    implements FlutteringIapPlatform {
+
   @override
   Future<String?> getPlatformVersion() => Future.value('42');
 }
@@ -16,10 +19,7 @@ void main() {
   });
 
   test('getPlatformVersion', () async {
-    // FlutteringIap flutteringIapPlugin = FlutteringIap();
-    // MockFlutteringIapPlatform fakePlatform = MockFlutteringIapPlatform();
-    // FlutteringIapPlatform.instance = fakePlatform;
-
-    // expect(await flutteringIapPlugin.getPlatformVersion(), '42');
+    MockFlutteringIapPlatform fakePlatform = MockFlutteringIapPlatform();
+    FlutteringIapPlatform.instance = fakePlatform;
   });
 }
