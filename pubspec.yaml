@@ -5,8 +5,8 @@ homepage:
 publish_to: none
 
 environment:
-  sdk: '>=3.0.5 <4.0.0'
-  flutter: ">=2.5.0"
+  sdk: ">=2.18.0 <4.0.0"
+  flutter: ">=3.3.0"
 
 dependencies:
   flutter:
