@@ -21,7 +21,8 @@ class GoogleIAP extends BaseIAP {
   GoogleIAP(List<IAPProduct> products) {
     /// ISNTANCE OF IN APP PURCHASE
     _inAppPurchase = InAppPurchase.instance;
-    _products = ValueNotifier<Map<String, IAPProduct>>(products.asMap().map((_, e) => MapEntry(e.id, e)));
+    _products = ValueNotifier<Map<String, IAPProduct>>(
+        products.asMap().map((_, e) => MapEntry(e.id, e)));
     _error = ValueNotifier<Object?>(null);
     _purchaseDetailsList = ValueNotifier({})..addListener(_onInfo);
     _productDetailsList = ValueNotifier({})..addListener(_onPurchased);
@@ -55,18 +56,21 @@ class GoogleIAP extends BaseIAP {
       switch (product.type) {
         case IAPType.consumables:
           _inAppPurchase.buyConsumable(
-            purchaseParam: _createParams(productDetails: productDetails, subscription: false),
+            purchaseParam: _createParams(
+                productDetails: productDetails, subscription: false),
             autoConsume: true,
           );
           break;
         case IAPType.nonConsumables:
           _inAppPurchase.buyNonConsumable(
-            purchaseParam: _createParams(productDetails: productDetails, subscription: false),
+            purchaseParam: _createParams(
+                productDetails: productDetails, subscription: false),
           );
           break;
         case IAPType.subscriptions:
           _inAppPurchase.buyConsumable(
-            purchaseParam: _createParams(productDetails: productDetails, subscription: true),
+            purchaseParam: _createParams(
+                productDetails: productDetails, subscription: true),
           );
           break;
         default:
@@ -80,7 +84,8 @@ class GoogleIAP extends BaseIAP {
   }
 
   @override
-  void listen(Function(List<IAPProduct>) onProductChanged, Function(Object?) onError) {
+  void listen(
+      Function(List<IAPProduct>) onProductChanged, Function(Object?) onError) {
     _products.addListener(() {
       Debug.log("GOOGLE IAP PRODUCTS CHANGED ${_products.value.values}");
       onProductChanged(_products.value.values.toList());
@@ -97,13 +102,17 @@ class GoogleIAP extends BaseIAP {
     try {
       _isSupported = await CurrentPlatform.instance.isGmsAvailable;
       Debug.log("GOOGLE IAP IS SUPPORTED $_isSupported");
+
       /// LISTEN PURCHASE
       _subscription = _inAppPurchase.purchaseStream.listen(
         (purchaseDetails) {
-          _productDetailsList.value = Map<String, ProductDetails>.from(_purchaseDetailsList.value..addAll(purchaseDetails.asMap().map((_, e) {
-            if (e.pendingCompletePurchase) _inAppPurchase.completePurchase(e);
-            return MapEntry(e.productID, e);
-          })));
+          _productDetailsList.value =
+              Map<String, ProductDetails>.from(_purchaseDetailsList.value
+                ..addAll(purchaseDetails.asMap().map((_, e) {
+                  if (e.pendingCompletePurchase)
+                    _inAppPurchase.completePurchase(e);
+                  return MapEntry(e.productID, e);
+                })));
         },
         onDone: () => _subscription.cancel(),
         onError: (error) {
@@ -111,13 +120,15 @@ class GoogleIAP extends BaseIAP {
           _subscription.cancel();
         },
       );
-      if(_isSupported) {
+      if (_isSupported) {
         /// CHECK IS AVAILIBALE
         _isAvailable = await _inAppPurchase.isAvailable();
         if (_isAvailable && CurrentPlatform.instance.isIos) {
-          _iosPlatformAddition = _inAppPurchase.getPlatformAddition<InAppPurchaseStoreKitPlatformAddition>();
+          _iosPlatformAddition = _inAppPurchase
+              .getPlatformAddition<InAppPurchaseStoreKitPlatformAddition>();
           await _iosPlatformAddition.setDelegate(PaymentQueueDelegate());
         }
+
         /// LOAD PRODUCTS
         await _loadProducts();
 
@@ -133,13 +144,16 @@ class GoogleIAP extends BaseIAP {
 
   Future<void> _loadProducts() async {
     try {
-      ProductDetailsResponse res = await _inAppPurchase.queryProductDetails(_products.value.keys.toSet());
+      ProductDetailsResponse res = await _inAppPurchase
+          .queryProductDetails(_products.value.keys.toSet());
       if (res.error != null) {
         _error.value = res.error;
       }
-      _productDetailsList.value = Map<String, ProductDetails>.from(_productDetailsList.value..addAll(res.productDetails.asMap().map((_, e) {
-        return MapEntry(e.id, e);
-      })));
+      _productDetailsList.value =
+          Map<String, ProductDetails>.from(_productDetailsList.value
+            ..addAll(res.productDetails.asMap().map((_, e) {
+              return MapEntry(e.id, e);
+            })));
     } catch (error) {
       _error.value = error;
       Debug.log("GOOGLE IAP LOAD PRODUCTS ERROR $error");
@@ -165,15 +179,18 @@ class GoogleIAP extends BaseIAP {
     return false;
   }
 
-  _createParams({required ProductDetails productDetails, bool subscription = false}) {
+  _createParams(
+      {required ProductDetails productDetails, bool subscription = false}) {
     return CurrentPlatform.instance.isAndroid
         ? GooglePlayPurchaseParam(
             productDetails: productDetails,
             applicationUserName: null,
-            changeSubscriptionParam: subscription && _purchaseDetailsList.value[productDetails.id] != null
+            changeSubscriptionParam: subscription &&
+                    _purchaseDetailsList.value[productDetails.id] != null
                 ? ChangeSubscriptionParam(
-                    oldPurchaseDetails: _purchaseDetailsList.value[productDetails.id]! as GooglePlayPurchaseDetails,
-                    prorationMode: ProrationMode.immediateWithTimeProration,
+                    oldPurchaseDetails: _purchaseDetailsList
+                        .value[productDetails.id]! as GooglePlayPurchaseDetails,
+                    replacementMode: ReplacementMode.withTimeProration,
                   )
                 : null,
           )
@@ -185,7 +202,8 @@ class GoogleIAP extends BaseIAP {
   _onPurchased() {
     for (var e in _purchaseDetailsList.value.values) {
       if (_products.value[e.productID] != null) {
-        _products.value[e.productID] = _products.value[e.productID]!..setPurchased(e.status == PurchaseStatus.purchased);
+        _products.value[e.productID] = _products.value[e.productID]!
+          ..setPurchased(e.status == PurchaseStatus.purchased);
       }
     }
 
