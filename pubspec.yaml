@@ -1,6 +1,6 @@
 name: fluttering_iap
 description: in app purchase for flutter (support google and huawei)
-version: 2.0.0
+version: 3.0.0
 homepage:
 
 environment:
@@ -13,8 +13,8 @@ dependencies:
   fluttering:
     git:
       url: git@github.com:brennan992k/fluttering.git
-  huawei_iap: ^6.13.0+302
-  in_app_purchase: ^3.2.0
+  huawei_iap: ^6.14.0+300
+  in_app_purchase: ^3.3.1
 
 dev_dependencies:
   flutter_test:
