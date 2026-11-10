@@ -14,6 +14,8 @@ abstract class IAwesomeIAP extends Provider with ProviderDelegate {
   void initial(IAPConfig config);
 
   Future<void> purchase(IAPProduct product);
+
+  Future<void> restore();
 }
 
 class AwesomeIAP extends IAwesomeIAP {
@@ -32,11 +34,11 @@ class AwesomeIAP extends IAwesomeIAP {
 
   @override
   List<IAPProduct> get products {
-    List<IAPProduct> _ = [];
-    for (var list in _products.values) {
-      _.addAll(list);
+    List<IAPProduct> list = [];
+    for (var items in _products.values) {
+      list.addAll(items);
     }
-    return _;
+    return list;
   }
 
   @override
@@ -46,29 +48,27 @@ class AwesomeIAP extends IAwesomeIAP {
   void initial(IAPConfig config) async {
     _config = config;
 
-    /// CHECK ENABLED
-    if(!config.enable) return;
+    if (!config.enable) return;
 
-    /// CREATE INSTANCE IAP
     _iaps.clear();
     for (var provider in _config.providers) {
       BaseIAP? iap;
-      if(!_iaps.containsKey(provider)) {
-        if(provider == IAPProvider.google) {
+      if (!_iaps.containsKey(provider)) {
+        if (provider == IAPProvider.google) {
           iap = GoogleIAP(_config.products.where((element) => element.provider == provider).toList());
-        }else if(provider == IAPProvider.huawei) {
+        } else if (provider == IAPProvider.huawei) {
           iap = HuaweiIAP(_config.products.where((element) => element.provider == provider).toList());
         }
       }
-      if(iap != null) {
+      if (iap != null) {
         final done = await iap.initial();
-        if(done) {
+        if (done) {
           iap.listen(
             (products) {
-                _products[provider] = products;
-                notifyListeners();
-            }, 
-            (error) => Debug.log(error.toString())
+              _products[provider] = products;
+              notifyListeners();
+            },
+            (error) => Debug.log(error.toString()),
           );
           _iaps[provider] = iap;
         }
@@ -84,6 +84,20 @@ class AwesomeIAP extends IAwesomeIAP {
       }
     } catch (error) {
       Debug.log(error);
+      rethrow;
     }
+  }
+
+  @override
+  Future<void> restore() async {
+    for (final entry in _iaps.entries) {
+      if (!entry.value.isSupported) continue;
+      try {
+        await entry.value.restore();
+      } catch (e) {
+        Debug.log('AwesomeIAP restore ${entry.key}: $e');
+      }
+    }
+    notifyListeners();
   }
 }

@@ -11,4 +11,7 @@ abstract class BaseIAP {
   Future<bool> initial();
 
   void listen(Function(List<IAPProduct>) onProductChanged, Function(Object?) onError);
+
+  /// Restore owned purchases from the store (Google / Huawei / Apple).
+  Future<void> restore() async {}
 }

@@ -84,6 +84,18 @@ class GoogleIAP extends BaseIAP {
   }
 
   @override
+  Future<void> restore() async {
+    try {
+      await _inAppPurchase.restorePurchases();
+      Debug.log("GOOGLE IAP restore requested");
+    } catch (e) {
+      _error.value = e;
+      Debug.log("GOOGLE IAP restore error $e");
+      rethrow;
+    }
+  }
+
+  @override
   void listen(
       Function(List<IAPProduct>) onProductChanged, Function(Object?) onError) {
     _products.addListener(() {

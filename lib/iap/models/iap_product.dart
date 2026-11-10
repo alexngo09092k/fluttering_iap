@@ -23,8 +23,9 @@ class IAPProduct extends ChangeNotifier {
   bool _isPurchased = false;
   bool get status => _isPurchased;
   setPurchased(bool isPurchased) {
+    if (_isPurchased == isPurchased) return;
     _isPurchased = isPurchased;
-    if (_isPurchased != isPurchased) notifyListeners();
+    notifyListeners();
   }
 
   IAPProduct copyWith({

@@ -21,7 +21,6 @@ class HuaweiIAP extends BaseIAP {
   late final ValueNotifier<Map<String, ProductInfo>> _productInfos;
   late final ValueNotifier<Map<String, InAppPurchaseData>> _purchaseInfos;
 
-
   bool _isSupported = CurrentPlatform.instance.isHuawei;
   @override
   bool get isSupported => _isSupported;
@@ -29,19 +28,34 @@ class HuaweiIAP extends BaseIAP {
   @override
   IAPProvider get provider => IAPProvider.huawei;
 
+  static const String _sigAlg = SignAlgorithmConstants.SIGNATURE_ALGORITHM_SHA256WITHRSA_PSS;
+
+  int _priceTypeOf(IAPType type) {
+    switch (type) {
+      case IAPType.consumables:
+        return IapClient.IN_APP_CONSUMABLE;
+      case IAPType.nonConsumables:
+        return IapClient.IN_APP_NONCONSUMABLE;
+      case IAPType.subscriptions:
+        return IapClient.IN_APP_SUBSCRIPTION;
+      default:
+        return IapClient.IN_APP_CONSUMABLE;
+    }
+  }
+
   @override
   Future<bool> initial() async {
     try {
       _isSupported = await CurrentPlatform.instance.isHmsAvailable;
       Debug.log("HUAWEI IAP IS SUPPORTED $_isSupported");
-      if(_isSupported) {
+      if (_isSupported) {
         for (var type in IAPType.values) {
-          _loadProducts(type);
-          _loadPurchaseProducts(type);
+          await _loadProducts(type);
+          await _loadPurchaseProducts(type);
         }
       }
       return true;
-    }catch(error) {
+    } catch (error) {
       _error.value = error;
       Debug.log("HUAWEI IAP INITIAL ERROR $error");
     }
@@ -51,42 +65,81 @@ class HuaweiIAP extends BaseIAP {
   @override
   Future<void> purchase(IAPProduct product) async {
     try {
-      late PurchaseResultInfo info;
-      switch (product.type) {
-        case IAPType.consumables:
-          info = await IapClient.createPurchaseIntent(PurchaseIntentReq(
-            priceType: IapClient.IN_APP_CONSUMABLE,
-            productId: product.id,
-            signatureAlgorithm: SignAlgorithmConstants.SIGNATURE_ALGORITHM_SHA256WITHRSA_PSS,
-          ));
-          break;
-        case IAPType.nonConsumables:
-          info = await IapClient.createPurchaseIntent(PurchaseIntentReq(
-            priceType: IapClient.IN_APP_NONCONSUMABLE,
-            productId: product.id,
-            signatureAlgorithm: SignAlgorithmConstants.SIGNATURE_ALGORITHM_SHA256WITHRSA_PSS,
-          ));
-          break;
-        case IAPType.subscriptions:
-          info = await IapClient.createPurchaseIntent(PurchaseIntentReq(
-            priceType: IapClient.IN_APP_SUBSCRIPTION,
-            productId: product.id,
-            signatureAlgorithm: SignAlgorithmConstants.SIGNATURE_ALGORITHM_SHA256WITHRSA_PSS,
-          ));
-          break;
-        default:
-          _error.value = ErrorDescription('No support type ${product.type}');
-          break;
-      }
+      final info = await IapClient.createPurchaseIntent(PurchaseIntentReq(
+        priceType: _priceTypeOf(product.type),
+        productId: product.id,
+        signatureAlgorithm: _sigAlg,
+      ));
+
       if (info.returnCode == HmsIapResults.ORDER_STATE_SUCCESS.resultCode) {
-        _loadProducts(product.type);
-        _loadPurchaseProducts(product.type);
+        // Persist purchase data if present, then consume consumables.
+        final purchaseData = info.inAppPurchaseData;
+        if (purchaseData != null && purchaseData.productId != null) {
+          _purchaseInfos.value = Map<String, InAppPurchaseData>.from(
+            _purchaseInfos.value..[purchaseData.productId!] = purchaseData,
+          );
+          if (product.type == IAPType.consumables) {
+            await _consumePurchase(purchaseData);
+          }
+        }
+        await _loadProducts(product.type);
+        await _loadPurchaseProducts(product.type);
+      } else if (info.returnCode == HmsIapResults.ORDER_STATE_CANCEL.resultCode) {
+        Debug.log("HUAWEI IAP PURCHASE CANCELLED");
       } else if (info.errMsg != null) {
         throw ErrorDescription(info.errMsg!);
+      } else {
+        throw ErrorDescription('Huawei IAP purchase failed code=${info.returnCode}');
       }
     } catch (error) {
       _error.value = error;
       Debug.log("HUAWEI IAP PURCHASE ERROR $error");
+      rethrow;
+    }
+  }
+
+  /// Required for consumables so the user can buy again.
+  Future<void> _consumePurchase(InAppPurchaseData data) async {
+    try {
+      final token = data.purchaseToken;
+      if (token == null || token.isEmpty) {
+        Debug.log("HUAWEI IAP consume skipped — empty purchaseToken");
+        return;
+      }
+      final result = await IapClient.consumeOwnedPurchase(ConsumeOwnedPurchaseReq(
+        purchaseToken: token,
+        signatureAlgorithm: _sigAlg,
+      ));
+      Debug.log("HUAWEI IAP consume result code=${result.returnCode} msg=${result.errMsg}");
+    } catch (e) {
+      Debug.log("HUAWEI IAP consume error $e");
+    }
+  }
+
+  @override
+  Future<void> restore() async {
+    if (!_isSupported) return;
+    try {
+      for (final type in IAPType.values) {
+        await _loadPurchaseProducts(type);
+        // Also consume any leftover consumables that were not consumed.
+        if (type == IAPType.consumables) {
+          final owned = await IapClient.obtainOwnedPurchases(OwnedPurchasesReq(
+            priceType: IapClient.IN_APP_CONSUMABLE,
+            signatureAlgorithm: _sigAlg,
+          ));
+          for (final p in owned.inAppPurchaseDataList ?? <InAppPurchaseData>[]) {
+            if (p.purchaseState == 0) {
+              await _consumePurchase(p);
+            }
+          }
+        }
+      }
+      Debug.log("HUAWEI IAP restore done");
+    } catch (e) {
+      _error.value = e;
+      Debug.log("HUAWEI IAP restore error $e");
+      rethrow;
     }
   }
 
@@ -96,118 +149,66 @@ class HuaweiIAP extends BaseIAP {
       Debug.log("HUAWEI IAP PRODUCTS CHANGED ${_products.value.values}");
       onProductChanged(_products.value.values.toList());
     });
-    
+
     _error.addListener(() {
       Debug.log("HUAWEI IAP HAS ERROR ${_error.value}");
       onError(_error.value);
     });
   }
 
-  _loadProducts(IAPType type) async {
+  Future<void> _loadProducts(IAPType type) async {
     try {
       final List<ProductInfo> list = [];
       final List<String> skuIds = _products.value.values.where((e) => e.type == type).map((e) => e.id).toList();
-      switch (type) {
-        case IAPType.consumables:
-          if(skuIds.isNotEmpty) {
-            list.addAll((await IapClient.obtainProductInfo(
-                ProductInfoReq(
-                  priceType: IapClient.IN_APP_CONSUMABLE,
-                  skuIds: skuIds,
-                ),
-              )).productInfoList ?? []);
-          }
+      if (skuIds.isEmpty) return;
 
-          break;
-        case IAPType.nonConsumables:
-          if(skuIds.isNotEmpty) {
-            list.addAll((await IapClient.obtainProductInfo(
-                ProductInfoReq(
-                  priceType: IapClient.IN_APP_NONCONSUMABLE,
-                  skuIds: skuIds,
-                ),
-              )).productInfoList ?? []);
-          }
-          break;
-        case IAPType.subscriptions:
-          if(skuIds.isNotEmpty) {
-            list.addAll((await IapClient.obtainProductInfo(
-                ProductInfoReq(
-                  priceType: IapClient.IN_APP_SUBSCRIPTION,
-                  skuIds: skuIds,
-                ),
-              )).productInfoList ?? []);
-          }
+      final result = await IapClient.obtainProductInfo(ProductInfoReq(
+        priceType: _priceTypeOf(type),
+        skuIds: skuIds,
+      ));
+      list.addAll(result.productInfoList ?? []);
 
-          break;
-        default:
-          break;
-      }
-
-      _productInfos.value = Map<String, ProductInfo>.from(_productInfos.value..addAll(list.asMap().map((_, e) {
-        return MapEntry(e.productId!, e);
-      })));
-
+      _productInfos.value = Map<String, ProductInfo>.from(_productInfos.value
+        ..addAll(list.asMap().map((_, e) => MapEntry(e.productId!, e))));
     } catch (error) {
       _error.value = error;
       Debug.log("HUAWEI IAP LOAD PRODUCTS ERROR $error");
     }
   }
 
-  _loadPurchaseProducts(IAPType type) async {
+  Future<void> _loadPurchaseProducts(IAPType type) async {
     try {
-      List<InAppPurchaseData> list = [];
-      switch (type) {
-        case IAPType.consumables:
-          list.addAll((await IapClient.obtainOwnedPurchases(OwnedPurchasesReq(
-                priceType: IapClient.IN_APP_CONSUMABLE,
-                signatureAlgorithm: SignAlgorithmConstants.SIGNATURE_ALGORITHM_SHA256WITHRSA_PSS,
-              )))
-                  .inAppPurchaseDataList ??
-              []);
-          break;
-        case IAPType.nonConsumables:
-          list.addAll((await IapClient.obtainOwnedPurchases(OwnedPurchasesReq(
-                priceType: IapClient.IN_APP_NONCONSUMABLE,
-                signatureAlgorithm: SignAlgorithmConstants.SIGNATURE_ALGORITHM_SHA256WITHRSA_PSS,
-              )))
-                  .inAppPurchaseDataList ??
-              []);
-          break;
-        case IAPType.subscriptions:
-          list.addAll((await IapClient.obtainOwnedPurchases(OwnedPurchasesReq(
-                priceType: IapClient.IN_APP_SUBSCRIPTION,
-                signatureAlgorithm: SignAlgorithmConstants.SIGNATURE_ALGORITHM_SHA256WITHRSA_PSS,
-              )))
-                  .inAppPurchaseDataList ??
-              []);
-          break;
-        default:
-      }
+      final result = await IapClient.obtainOwnedPurchases(OwnedPurchasesReq(
+        priceType: _priceTypeOf(type),
+        signatureAlgorithm: _sigAlg,
+      ));
+      final list = result.inAppPurchaseDataList ?? <InAppPurchaseData>[];
 
-      _purchaseInfos.value = Map<String, InAppPurchaseData>.from(_purchaseInfos.value..addAll(list.asMap().map((_, e) {
-        return MapEntry(e.productId!, e);
-      })));
+      _purchaseInfos.value = Map<String, InAppPurchaseData>.from(_purchaseInfos.value
+        ..addAll(list.asMap().map((_, e) {
+          return MapEntry(e.productId!, e);
+        })));
     } catch (error) {
       _error.value = error;
       Debug.log("HUAWEI IAP LOAD PURCHASE PRODUCTS ERROR $error");
     }
   }
 
-  _onPurchased() {
+  void _onPurchased() {
     for (var e in _purchaseInfos.value.values) {
       if (_products.value[e.productId] != null) {
-        _products.value[e.productId!] = _products.value[e.productId]!..setPurchased(e.purchaseState == 0);
+        // purchaseState == 0 => purchased and not refunded
+        _products.value[e.productId!] = _products.value[e.productId]!
+          ..setPurchased(e.purchaseState == 0);
       }
     }
-
     _products.value = Map<String, IAPProduct>.from(_products.value);
   }
 
-  _onInfo() {
+  void _onInfo() {
     for (var e in _productInfos.value.values) {
       if (_products.value[e.productId] != null) {
-          _products.value[e.productId!] = _products.value[e.productId]!.copyWith(
+        _products.value[e.productId!] = _products.value[e.productId]!.copyWith(
           info: IAPProductInfo(
             price: e.price ?? '',
             name: e.productName ?? '',
@@ -218,11 +219,10 @@ class HuaweiIAP extends BaseIAP {
         );
       }
     }
-
     _products.value = Map<String, IAPProduct>.from(_products.value);
   }
 
-  dispose() {
+  void dispose() {
     _products.dispose();
     _productInfos.dispose();
     _purchaseInfos.dispose();
