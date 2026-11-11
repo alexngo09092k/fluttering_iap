@@ -207,8 +207,9 @@ class HuaweiIAP extends BaseIAP {
 
   void _onInfo() {
     for (var e in _productInfos.value.values) {
-      if (_products.value[e.productId] != null) {
-        _products.value[e.productId!] = _products.value[e.productId]!.copyWith(
+      final existing = _products.value[e.productId];
+      if (existing != null) {
+        final updated = existing.copyWith(
           info: IAPProductInfo(
             price: e.price ?? '',
             name: e.productName ?? '',
@@ -217,6 +218,9 @@ class HuaweiIAP extends BaseIAP {
             currency: e.currency ?? '',
           ),
         );
+        // copyWith creates a new instance — preserve purchase/subscription flag
+        if (existing.status) updated.setPurchased(true);
+        _products.value[e.productId!] = updated;
       }
     }
     _products.value = Map<String, IAPProduct>.from(_products.value);

@@ -24,8 +24,8 @@ class GoogleIAP extends BaseIAP {
     _products = ValueNotifier<Map<String, IAPProduct>>(
         products.asMap().map((_, e) => MapEntry(e.id, e)));
     _error = ValueNotifier<Object?>(null);
-    _purchaseDetailsList = ValueNotifier({})..addListener(_onInfo);
-    _productDetailsList = ValueNotifier({})..addListener(_onPurchased);
+    _purchaseDetailsList = ValueNotifier({})..addListener(_onPurchased);
+    _productDetailsList = ValueNotifier({})..addListener(_onInfo);
   }
 
   late final ValueNotifier<Map<String, IAPProduct>> _products;
@@ -68,7 +68,8 @@ class GoogleIAP extends BaseIAP {
           );
           break;
         case IAPType.subscriptions:
-          _inAppPurchase.buyConsumable(
+          // Subscriptions use buyNonConsumable in the official plugin API.
+          _inAppPurchase.buyNonConsumable(
             purchaseParam: _createParams(
                 productDetails: productDetails, subscription: true),
           );
@@ -118,13 +119,16 @@ class GoogleIAP extends BaseIAP {
       /// LISTEN PURCHASE
       _subscription = _inAppPurchase.purchaseStream.listen(
         (purchaseDetails) {
-          _productDetailsList.value =
-              Map<String, ProductDetails>.from(_purchaseDetailsList.value
-                ..addAll(purchaseDetails.asMap().map((_, e) {
-                  if (e.pendingCompletePurchase)
-                    _inAppPurchase.completePurchase(e);
-                  return MapEntry(e.productID, e);
-                })));
+          _purchaseDetailsList.value =
+              Map<String, PurchaseDetails>.from(_purchaseDetailsList.value)
+                ..addAll({
+                  for (final e in purchaseDetails) e.productID: e,
+                });
+          for (final e in purchaseDetails) {
+            if (e.pendingCompletePurchase) {
+              _inAppPurchase.completePurchase(e);
+            }
+          }
         },
         onDone: () => _subscription.cancel(),
         onError: (error) {
@@ -224,8 +228,9 @@ class GoogleIAP extends BaseIAP {
 
   _onInfo() {
     for (var e in _productDetailsList.value.values) {
-      if (_products.value[e.id] != null) {
-        _products.value[e.id] = _products.value[e.id]!.copyWith(
+      final existing = _products.value[e.id];
+      if (existing != null) {
+        final updated = existing.copyWith(
           info: IAPProductInfo(
             price: e.price,
             name: e.title,
@@ -234,6 +239,9 @@ class GoogleIAP extends BaseIAP {
             currency: e.currencySymbol,
           ),
         );
+        // copyWith creates a new instance — preserve purchase flag
+        if (existing.status) updated.setPurchased(true);
+        _products.value[e.id] = updated;
       }
     }
 
