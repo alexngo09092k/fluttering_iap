@@ -1,6 +1,6 @@
 name: fluttering_iap
 description: in app purchase for flutter (support google and huawei)
-version: 3.0.1
+version: 3.0.2
 homepage:
 
 environment:
