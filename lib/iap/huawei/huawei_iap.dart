@@ -49,6 +49,17 @@ class HuaweiIAP extends BaseIAP {
       _isSupported = await CurrentPlatform.instance.isHmsAvailable;
       Debug.log("HUAWEI IAP IS SUPPORTED $_isSupported");
       if (_isSupported) {
+        // Ensure IAP environment is ready before loading products.
+        try {
+          final env = await IapClient.isEnvReady();
+          Debug.log("HUAWEI IAP isEnvReady returnCode=${env.returnCode} status=${env.status}");
+          if (env.returnCode != HmsIapResults.ORDER_STATE_SUCCESS.resultCode) {
+            Debug.log("HUAWEI IAP environment not ready: ${env.returnCode}");
+            // Still attempt product load; purchase will re-check.
+          }
+        } catch (e) {
+          Debug.log("HUAWEI IAP isEnvReady error: $e");
+        }
         for (var type in IAPType.values) {
           await _loadProducts(type);
           await _loadPurchaseProducts(type);
@@ -65,6 +76,24 @@ class HuaweiIAP extends BaseIAP {
   @override
   Future<void> purchase(IAPProduct product) async {
     try {
+      // Re-check environment so Huawei Pay can launch (reviewer path).
+      try {
+        final env = await IapClient.isEnvReady();
+        Debug.log("HUAWEI IAP purchase isEnvReady=${env.returnCode}");
+        // 60002 = IAP not activated; 0 = success
+        if (env.returnCode == 60002) {
+          throw ErrorDescription(
+            'Huawei IAP is not activated. Enable In-App Purchases in AppGallery Connect and wait for it to take effect.',
+          );
+        }
+        if (env.returnCode != 0) {
+          Debug.log("HUAWEI IAP env warning code=${env.returnCode}");
+        }
+      } catch (e) {
+        if (e is ErrorDescription) rethrow;
+        Debug.log("HUAWEI IAP isEnvReady before purchase: $e");
+      }
+
       final info = await IapClient.createPurchaseIntent(PurchaseIntentReq(
         priceType: _priceTypeOf(product.type),
         productId: product.id,
