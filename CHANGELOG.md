@@ -1,9 +1,14 @@
+## 4.0.0
+
+* Public release on pub.dev.
+* Added explicit dependencies: `in_app_purchase_android`, `in_app_purchase_storekit`.
+* Depends on `fluttering: ^4.0.0`.
+* Fixed unreachable switch defaults and returnCode type comparisons.
+* Unified Google/Apple IAP + Huawei IAP under one API.
+
 ## 3.0.4
 
-* Prepared for public release on pub.dev.
-* Depends on `fluttering: ^3.0.0` instead of private git.
-* Added MIT LICENSE, full README, and package topics.
-* Unified Google/Apple IAP + Huawei IAP under one API.
+* Internal packaging.
 
 ## 0.0.1
 
