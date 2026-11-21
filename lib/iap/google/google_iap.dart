@@ -74,9 +74,6 @@ class GoogleIAP extends BaseIAP {
                 productDetails: productDetails, subscription: true),
           );
           break;
-        default:
-          _error.value = ErrorDescription('No support type ${product.type}');
-          break;
       }
     } catch (error) {
       _error.value = error;

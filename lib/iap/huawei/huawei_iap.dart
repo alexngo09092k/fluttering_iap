@@ -38,8 +38,6 @@ class HuaweiIAP extends BaseIAP {
         return IapClient.IN_APP_NONCONSUMABLE;
       case IAPType.subscriptions:
         return IapClient.IN_APP_SUBSCRIPTION;
-      default:
-        return IapClient.IN_APP_CONSUMABLE;
     }
   }
 
@@ -80,13 +78,13 @@ class HuaweiIAP extends BaseIAP {
       try {
         final env = await IapClient.isEnvReady();
         Debug.log("HUAWEI IAP purchase isEnvReady=${env.returnCode}");
-        // 60002 = IAP not activated; 0 = success
-        if (env.returnCode == 60002) {
+        // 60002 = IAP not activated; 0 = success (returnCode is String?)
+        if (env.returnCode == '60002') {
           throw ErrorDescription(
             'Huawei IAP is not activated. Enable In-App Purchases in AppGallery Connect and wait for it to take effect.',
           );
         }
-        if (env.returnCode != 0) {
+        if (env.returnCode != null && env.returnCode != '0') {
           Debug.log("HUAWEI IAP env warning code=${env.returnCode}");
         }
       } catch (e) {
